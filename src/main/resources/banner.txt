@@ -5,4 +5,4 @@
  \__,_| .__/|_|      \__, |\__,_|
       |_|            |___/
       
-Author Felipe Nascimento
+Desenvolvida por Felipe Nascimento

@@ -5,12 +5,12 @@ import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.GetMapping;
 import com.google.api.services.drive.model.File;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import javax.servlet.http.HttpServletResponse;
 import org.springframework.http.HttpHeaders;
 import br.apigd.service.GoogleDriveService;
 import org.springframework.http.MediaType;
-import java.io.OutputStream;
+import lombok.AllArgsConstructor;
 import java.io.Serializable;
 import java.io.IOException;
 import java.util.List;
@@ -23,20 +23,11 @@ import java.util.List;
  */
 
 @RestController
+@AllArgsConstructor
 @RequestMapping("/v1/drive")
 public class GoogleDriveController implements Serializable {
 	private static final long serialVersionUID = 6153545797045040459L;
 	private GoogleDriveService googleDriveService;
-	
-	/**
-	 * Contrutor da classe.
-	 * 
-	 * @param googleDriveService - {@link GoogleDriveService} - serviço de comunicação com a API do Google Drive
-	 * 
-	 */
-	public GoogleDriveController(GoogleDriveService googleDriveService) {
-		this.googleDriveService = googleDriveService;
-	}
 	
 	/**
 	 * Método responsável pela listagem de arquivos de uma determinada pasta.
@@ -50,7 +41,9 @@ public class GoogleDriveController implements Serializable {
 	 */
 	@GetMapping("/listar-arquivos-pasta/{folderId}")
     public List<File> listFilesInFolder(@PathVariable String folderId) throws IOException {
+		
         return googleDriveService.listFilesInFolder(folderId);
+        
     }
 	
 	/**
@@ -67,14 +60,12 @@ public class GoogleDriveController implements Serializable {
 	@GetMapping("/baixar-arquivo/{fileId}")
 	public ResponseEntity<Void> downloadFile(@PathVariable String fileId, HttpServletResponse response) throws IOException {
 		
-		File file = googleDriveService.getFile(fileId);
+		var file = googleDriveService.getFile(fileId);
 		
 		response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
 		response.setHeader(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", file.getName()));
 		
-		OutputStream outputStream = response.getOutputStream();
         googleDriveService.downloadFile(fileId, response.getOutputStream());
-        outputStream.flush();
         
         return ResponseEntity.ok().build();
 		

@@ -14,9 +14,14 @@ import org.springframework.boot.SpringApplication;
 @SpringBootApplication
 @ComponentScan({ "br.apigd.controller", "br.apigd.service" })
 public class ApiGdApplication {
-
+	
+	/**
+	 * Método responsável pela inicialização da API-GD.
+	 */
 	public static void main(String[] args) {
+		
 		SpringApplication.run(ApiGdApplication.class, args);
+		
 	}
 
 }
