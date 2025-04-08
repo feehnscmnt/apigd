@@ -12,7 +12,7 @@ import org.springframework.boot.SpringApplication;
  */
 
 @SpringBootApplication
-@ComponentScan({ "br.apigd.controller", "br.apigd.service" })
+@ComponentScan({ "br.apigd.controller", "br.apigd.security", "br.apigd.service" })
 public class ApiGdApplication {
 	
 	/**

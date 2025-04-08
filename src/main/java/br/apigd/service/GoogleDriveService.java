@@ -17,6 +17,7 @@ import com.google.api.services.drive.Drive;
 import jakarta.annotation.PostConstruct;
 import java.io.InputStreamReader;
 import java.util.Collections;
+import java.util.Comparator;
 import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.IOException;
@@ -97,6 +98,21 @@ public class GoogleDriveService implements Serializable {
 	}
 	
 	/**
+	 * 
+	 * @param fileId - {@link String} - id do arquivo que será baixado
+	 * 
+	 * @return o arquivo de acordo com o id
+	 * 
+	 * @throws {@link IOException}
+	 * 
+	 */
+	public File getFile(String fileId) throws IOException {
+		
+        return drive.files().get(fileId).execute();
+        
+    }
+	
+	/**
 	 * Método responsável pela listagem de arquivos de uma determinada pasta.
 	 * 
 	 * @param folderId - {@link String} - id da pasta que contém os arquivos
@@ -120,7 +136,9 @@ public class GoogleDriveService implements Serializable {
 	        allFiles.addAll(files.getFiles());
 	        request.setPageToken(files.getNextPageToken());
 	        
-	    } while (Objects.nonNull(request.getPageToken()) && request.getPageToken().isEmpty());
+	    } while (Objects.nonNull(request.getPageToken()));
+	    
+	    allFiles.sort(Comparator.comparing(File::getName));
 
 	    return allFiles;
 	    
@@ -140,19 +158,35 @@ public class GoogleDriveService implements Serializable {
 		drive.files().get(fileId).executeMedia().download(outputStream);
 		
     }
-	
-	/**
-	 * 
-	 * @param fileId - {@link String} - id do arquivo que será baixado
-	 * 
-	 * @return o arquivo de acordo com o id
-	 * 
-	 * @throws {@link IOException}
-	 * 
-	 */
-	public File getFile(String fileId) throws IOException {
-		
-        return drive.files().get(fileId).execute();
+    
+    /**
+     * Método responsável por obter informações de um arquivo para visualização (se aplicável).
+     * Para alguns tipos de arquivo, o Google Drive pode gerar um link de visualização.
+     *
+     * @param fileId - {@link String} - id do arquivo que será visualizado
+     * 
+     * @return {@link File} - objeto contendo metadados do arquivo, incluindo um possível link de visualização
+     * 
+     * @throws {@link IOException}
+     * 
+     */
+    public File viewMetadataFile(String fileId) throws IOException {
+    	
+    	return drive.files().get(fileId).setFields("id, name, mimeType, webViewLink, webContentLink").execute();
+    	
+    }
+    
+    /**
+     * Método responsável pela exclusão de um determinado arquivo.
+     *
+     * @param fileId - {@link String} - id do arquivo que será excluído
+     *
+     * @throws {@link IOException}
+     * 
+     */
+    public void deleteFile(String fileId) throws IOException {
+    	
+        drive.files().delete(fileId).execute();
         
     }
 	
