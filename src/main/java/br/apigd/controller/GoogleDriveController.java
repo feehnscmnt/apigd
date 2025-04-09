@@ -8,10 +8,8 @@ import org.springframework.web.bind.annotation.GetMapping;
 import com.google.api.services.drive.model.File;
 import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.http.ResponseEntity;
-import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
 import br.apigd.service.GoogleDriveService;
-import org.springframework.http.MediaType;
 import br.apigd.model.ResponseMessages;
 import lombok.AllArgsConstructor;
 import java.io.Serializable;
@@ -19,7 +17,7 @@ import java.io.IOException;
 import java.util.List;
 
 /**
- * Classe controller responsável pela listagem e download de arquivos.
+ * Classe controller responsável pelas requisições de consumo da API do Google Drive.
  * 
  * @author Felipe Nascimento
  *
@@ -53,7 +51,7 @@ public class GoogleDriveController implements Serializable {
 	 * Método responsável pelo download de um determinado arquivo.
 	 * 
 	 * @param fileId - {@link PathVariable} / {@link String} - id do arquivo que será baixado
-	 * @param response - {@link HttpServletResponse} - configura e envia a resposta HTTP de volta ao cliente.
+	 * @param response - {@link HttpServletResponse} - configura e envia a resposta HTTP de volta ao cliente
 	 * 
 	 * @return arquivo baixado
 	 * 
@@ -63,12 +61,7 @@ public class GoogleDriveController implements Serializable {
 	@GetMapping("/baixar-arquivo/{fileId}")
 	public ResponseEntity<Void> downloadFile(@PathVariable String fileId, HttpServletResponse response) throws IOException {
 		
-		var file = googleDriveService.getFile(fileId);
-		
-		response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
-		response.setHeader(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", file.getName()));
-		
-        googleDriveService.downloadFile(fileId, response.getOutputStream());
+		googleDriveService.downloadFile(fileId, response);
         
         return ResponseEntity.ok().build();
 		

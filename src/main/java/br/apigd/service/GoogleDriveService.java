@@ -11,14 +11,18 @@ import com.google.api.client.auth.oauth2.Credential;
 import com.google.api.client.json.gson.GsonFactory;
 import com.google.api.services.drive.DriveScopes;
 import com.google.api.services.drive.model.File;
+import jakarta.servlet.http.HttpServletResponse;
 import org.springframework.stereotype.Service;
 import java.security.GeneralSecurityException;
+import org.springframework.http.HttpHeaders;
 import com.google.api.services.drive.Drive;
+import org.apache.logging.log4j.LogManager;
+import org.springframework.http.MediaType;
 import jakarta.annotation.PostConstruct;
+import org.apache.logging.log4j.Logger;
 import java.io.InputStreamReader;
 import java.util.Collections;
 import java.util.Comparator;
-import java.io.OutputStream;
 import java.io.Serializable;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -26,7 +30,7 @@ import java.util.Objects;
 import java.util.List;
 
 /**
- * Classe service responsável pela configuração da aplicação junto à API do Google
+ * Classe service responsável pela configuração da API-GD junto à API do Google Drive.
  * 
  * @author Felipe Nascimento
  *
@@ -34,6 +38,7 @@ import java.util.List;
 
 @Service
 public class GoogleDriveService implements Serializable {
+	private static final Logger LOG = LogManager.getLogger(GoogleDriveService.class.getName());
 	private static final long serialVersionUID = 7756442328171923425L;
 	private transient Drive drive;
 	
@@ -48,8 +53,12 @@ public class GoogleDriveService implements Serializable {
 	@PostConstruct
 	public void init() throws GeneralSecurityException, IOException {
 		
+		LOG.info("Realizando a configuração e inicialização do cliente da API do Google Drive...");
+		
 		var netHttpTransport = GoogleNetHttpTransport.newTrustedTransport();
 		drive = new Drive.Builder(netHttpTransport, GsonFactory.getDefaultInstance(), getCredentials(netHttpTransport)).setApplicationName("API-GD").build();
+		
+		LOG.info("Configuração realizada com sucesso.");
 		
 	}
 	
@@ -98,21 +107,6 @@ public class GoogleDriveService implements Serializable {
 	}
 	
 	/**
-	 * 
-	 * @param fileId - {@link String} - id do arquivo que será baixado
-	 * 
-	 * @return o arquivo de acordo com o id
-	 * 
-	 * @throws {@link IOException}
-	 * 
-	 */
-	public File getFile(String fileId) throws IOException {
-		
-        return drive.files().get(fileId).execute();
-        
-    }
-	
-	/**
 	 * Método responsável pela listagem de arquivos de uma determinada pasta.
 	 * 
 	 * @param folderId - {@link String} - id da pasta que contém os arquivos
@@ -123,6 +117,8 @@ public class GoogleDriveService implements Serializable {
 	 * 
 	 */
 	public List<File> listFilesInFolder(String folderId) throws IOException {
+		
+		LOG.info("Listando arquivos da pasta id {}", folderId);
 		
 	    List<File> allFiles = new ArrayList<>();
 	    
@@ -139,7 +135,9 @@ public class GoogleDriveService implements Serializable {
 	    } while (Objects.nonNull(request.getPageToken()));
 	    
 	    allFiles.sort(Comparator.comparing(File::getName));
-
+	    
+	    LOG.info("Arquivos listados com sucesso.");
+	    
 	    return allFiles;
 	    
 	}
@@ -148,14 +146,23 @@ public class GoogleDriveService implements Serializable {
 	 * Método responsável pelo download de um determinado arquivo.
 	 * 
 	 * @param fileId - {@link String} - id do arquivo que será baixado
-	 * @param outputStream - {@link OutputStream} - objeto com os bytes do arquivo
+	 * @param response - {@link HttpServletResponse} - configura e envia a resposta HTTP de volta ao cliente
 	 * 
 	 * @throws {@link IOException}
 	 * 
 	 */
-	public void downloadFile(String fileId, OutputStream outputStream) throws IOException {
+	public void downloadFile(String fileId, HttpServletResponse response) throws IOException {
 		
-		drive.files().get(fileId).executeMedia().download(outputStream);
+		LOG.info("Realizando o download do arquivo id {}", fileId);
+		
+		var file = drive.files().get(fileId).execute();
+		
+		response.setContentType(MediaType.APPLICATION_OCTET_STREAM_VALUE);
+		response.setHeader(HttpHeaders.CONTENT_DISPOSITION, String.format("attachment; filename=\"%s\"", file.getName()));
+		
+		drive.files().get(fileId).executeMedia().download(response.getOutputStream());
+		
+		LOG.info("Download realizado com sucesso.");
 		
     }
     
@@ -172,6 +179,8 @@ public class GoogleDriveService implements Serializable {
      */
     public File viewMetadataFile(String fileId) throws IOException {
     	
+    	LOG.info("As informações do arquivo id {} forma obtidas com sucesso.", fileId);
+    	
     	return drive.files().get(fileId).setFields("id, name, mimeType, webViewLink, webContentLink").execute();
     	
     }
@@ -186,7 +195,11 @@ public class GoogleDriveService implements Serializable {
      */
     public void deleteFile(String fileId) throws IOException {
     	
+    	LOG.info("Realizando a exclusão do arquivo id {}", fileId);
+    	
         drive.files().delete(fileId).execute();
+        
+        LOG.info("Exclusão realizada com sucesso.");
         
     }
 	

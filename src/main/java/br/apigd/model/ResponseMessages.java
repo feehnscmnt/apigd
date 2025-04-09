@@ -6,7 +6,7 @@ import java.io.Serializable;
 import lombok.Data;
 
 /**
- * Classe model para tratamento das mensagens dos responses da aplicação.
+ * Classe model para tratamento das mensagens dos responses da API-GD.
  * 
  * @author Felipe Nascimento
  *
